@@ -1,0 +1,519 @@
+#include <cstdlib>
+#include <iostream> 
+#include <limits.h>
+using namespace std;
+	
+
+/***********************************************************************************/
+// Matrice d'adjcence et FS APS
+/***********************************************************************************/
+
+/***********************************************************************************/
+// Conversion adj vers fs_aps
+/***********************************************************************************/
+
+void adj2fs_aps(int **A, int*& fs,int*& aps)
+{
+   int n=A[0][0]; //nombre de sommets
+   int m = A[0][1]; //nombre d'arcs
+   fs = new int[n+m+1]; // tableau des successeurs
+   *fs=n+m+1;
+   aps=new int[n+1]; // tableau d'adresses des prochains successeurs
+   *aps=n+1; 
+   int k=1;
+   for(int i=1;i<=n;i++)
+   {
+      *aps=k;
+      for(int j=1;j<=n;j++)
+      {
+         if(A[i][j] == 1)
+         {
+            fs[k]=j;
+            k++;
+         }
+         fs[k]=0;
+         k++;
+      }
+   }
+}
+
+/***********************************************************************************/
+// Conversion fs_aps => adj
+// A CORRIGER
+/***********************************************************************************/
+
+
+void fs_aps2adj(int* fs, int* aps, int**& A)
+{
+   int s,x,n=*aps;
+   A=new int*[n+1];
+   for(int i=0;i<=n;i++)
+   {
+      A[i]=new int[n+1];
+      for(int j=1;j<=*fs;j++) A[i][j]=0;
+      A[0][0]=n;
+      A[0][1]=(*fs)-n;
+      s=1;
+      for(int i=1;i<=*fs;i++)
+      {
+         if((x=fs[i])==0)
+            s++;
+         else
+            A[s][x]=1;
+      }
+      //fs[i] = (*fs)+i; 
+      }
+}
+
+/***********************************************************************************/
+// Demi degrés intérieurs et demi degrés extérieurs
+/***********************************************************************************/
+
+/***********************************************************************************/
+// Déterminer les DDE
+/***********************************************************************************/
+
+
+void det_dde(int* fs,int* aps,int*& dde)
+{
+   int n=*aps;
+   dde=new int[n+1];
+   for(int i=1;i<n;i++) dde[i]=aps[i+1]-aps[i];
+   dde[n]=*fs - aps[n];
+
+
+}
+
+/***********************************************************************************/
+// Déterminer les DDI
+/***********************************************************************************/
+
+void det_ddi(int* fs, int* aps, int*& ddi){
+   int n=*aps,m=*fs;
+   ddi=new int[n+1];
+   for(int i=1;i<=m;i++)
+   {
+      for(int j=1;j<=m;j++)
+         if (fs[i] == j) ddi[fs[i]]++;
+   }
+}
+
+
+/***********************************************************************************/
+// Déterminer FP 
+/***********************************************************************************/
+
+
+void fs2fp(int* fs,int* aps,int*& fp,int*& app)
+{
+   int n=*fs,m=*aps;
+   fp=new int[n+1];
+   *fp=*fs;
+   app=new int[m];
+
+   int* ddi;
+   det_ddi(fs,aps,ddi);
+   *app=*aps;
+   app[1]=1;
+   for(int i=2;i<=m;i++) app[i]==app[i-1]+ddi[i]+1;
+
+   int pos=1;
+   for(int j=1;j<=n;j++)
+   {
+      if (fs[j] == 0)
+         pos++;
+      else
+         {
+            fp[app[fs[j]]]=pos;
+            app[pos]++;
+         
+         }
+
+   }
+
+   for(int k=1; k<=*app;k++) fp[app[k]]=0;
+   app[1]=1;
+   for(int i=*app;i>1;i--) app[i] = app[i-1]+1;
+
+}
+
+/***********************************************************************************/
+// Distance d'un sommet
+/***********************************************************************************/
+
+
+
+void dist_s(int *fs,int* aps,int s,int*& marque)
+{
+   int n=*aps,i;
+   marque=new int[n+1];
+   for(int i=1;i<=n;i++) marque[i]=-1;
+   int *fa=new int[n+1];
+   int t=1,q=2,k=2,d=0;
+   fa[1]=s;
+   marque[s]=0;
+   while(t<q)
+   {
+      d++;
+      for(int j=t;j<q;j++)
+      {
+         int l=aps[fa[j]];
+         while(fs[l]!=0)
+         {
+            if(marque[fs[l]] != -1)
+            {
+               marque[fs[l]]=d;
+               fa[k++]=fs[l];
+            }
+            l++;
+         }
+      }
+      t=-q;
+      q=k;
+   }
+}
+
+/***********************************************************************************/
+// Matrice des distance
+// A CORRIGER 
+/***********************************************************************************/
+
+
+
+void mat_dist(int* fs,int* aps, int**& dist){
+   int n=*aps;
+   dist=new int*[n+1];
+ //  for(int s=1;s<=n;s++) dist_s(fs,aps,dist[s]);
+}
+
+/***********************************************************************************/
+// Pile chainée
+/***********************************************************************************/
+	
+/***********************************************************************************/
+// Initialisation de la pile chainée
+/***********************************************************************************/
+
+
+void init_pilch(int*& pilch)
+{
+   *pilch=0;
+}
+
+
+/***********************************************************************************/
+// Empiler 
+/***********************************************************************************/
+
+
+void empiler(int x,int*& pilch)
+{
+   pilch[x]=*pilch;
+   *pilch=x;
+}
+
+
+
+/***********************************************************************************/
+// Dépiler
+/***********************************************************************************/
+
+
+void depiler(int*& pilch)
+{
+   *pilch=pilch[*pilch];
+}
+
+/***********************************************************************************/
+// Parcourir la pile chainée
+/***********************************************************************************/
+
+
+void parcourir(int*& pilch, int s)
+{
+   s=*pilch;
+   while(s != 0)
+   {
+      //traiter s
+      s=pilch[s];
+   }
+}
+
+
+
+/***********************************************************************************/
+// Détermination du rang
+/***********************************************************************************/
+
+int det_rang(int* fs, int* aps, int*& rang,int*& pilch,int*& prem)
+{
+   int n=*aps;
+   rang=new int[n+1];
+   *rang=n;
+   pilch=new int[n+1];
+   prem=new int[n];
+   int* ddi;
+   det_ddi(fs,aps,ddi);
+   *pilch=0;
+   int k=-1;
+   int s,t,cpt=0;
+   for(int i=1;i<=n;i++)
+   {
+      rang[i]=-1;
+      if (ddi[i]==0) empiler(i,pilch);
+   }
+   s=*pilch;
+   *prem=s;
+   while(*pilch > 0)
+   {
+      rang[s]=k;
+      cpt++;
+      for(int l=aps[s];(t=fs[l] >0);l++)
+      {
+         ddi[t]--;
+         if(ddi[t] == 0) empiler(t,pilch);
+      }
+      s=pilch[s];
+   }
+   s=*pilch;
+   prem[k+1]=s;
+   if(cpt == n)
+      return k;
+   else
+      return -1;
+}
+   
+/***********************************************************************************/
+// Editer la longueur des chemins
+/***********************************************************************************/
+
+	
+
+void edit_longueur_chemin(int s,int* rang,int* pred)
+{
+   int k=rang[s];
+   int *chem= new int[k+1];
+   chem[k]=s;
+   while(k>0)
+   {
+      s=pred[s];
+      chem[--k]=s;
+      for(int i=0;i<=rang[s];s++)
+         cout << chem[i] << " ";
+      cout << endl;
+   }
+}
+
+/***********************************************************************************/
+// Déterminer les prédécesseurs
+/***********************************************************************************/
+
+
+void det_pred(int* fs,int* aps,int* rang, int*& pred)
+{
+   int n=*aps,t;
+   pred=new int[n];
+   for(int i=1;i<=n;i++)
+      for(int l=aps[i];(t=fs[l]) > 0;++l)
+         if(rang[i] == rang[t -1]) pred[t] = i;
+}
+
+/***********************************************************************************/
+// Editer les chemins d'une arborescence
+/***********************************************************************************/
+
+
+void edit_chem(int s,int* fs,int* aps, int*& chem, int*& haut){
+int t;
+
+for(int i=0;i<=haut[s];i++) cout<< chem[haut[s]];
+cout << endl;
+
+for(int i=aps[s]; (t = fs[i])>0; i++)
+{
+   haut[t] = haut[s] +1;
+   chem[haut[t]]=t;
+   edit_chem(t, fs, aps, chem, haut);
+}
+
+}
+
+/***********************************************************************************/
+// Editer un chemin
+/***********************************************************************************/
+
+
+void chemin(int* fs, int* aps, int s){
+int n=*aps;
+int* chem = new int[n+1];
+int* haut = new int[n+1];
+haut[s]=0;
+*chem=s;
+edit_chem(s,fs,aps, chem, haut);
+
+}
+
+
+/***********************************************************************************/
+// Nombre de descendants de tous les sommets
+/***********************************************************************************/
+
+void nb_desc(int s, int* aps, int* fs, int*& nbd)
+{
+   int t;
+   for(int i = aps[s];(t = fs[i])> 0;i++)
+   {
+      nb_desc(t,aps,fs,nbd);
+      nbd[s] += nbd[t];
+   }
+
+nbd[s]=1;
+
+}
+
+/***********************************************************************************/
+// Nombre de descendants d'un seul sommet
+/***********************************************************************************/
+
+void desc(int* fs, int* aps, int s, int*& nbd){
+int n = *aps;
+nbd = new int[n+1];
+*nbd=n;
+nb_desc(s,aps,fs,nbd);
+
+
+}
+/***********************************************************************************/
+// FS APS vers PRED
+/***********************************************************************************/
+
+
+void fsaps2pred(int* fs, int* aps, int*& pred)
+{
+   int n=*aps;
+   int t, s=1;
+
+pred= new int[n];
+
+for(int i= 1; i<=*fs;i++)
+{
+if (fs[i]>0)
+   pred[fs[i]]=s;
+else
+   s++;
+}
+
+
+}
+
+
+/***********************************************************************************/
+// Problème d'ordonnancement
+/***********************************************************************************/
+
+
+
+
+
+void chemins_critiques(int *fp, int*app,int* cout, int*& fpc,int*& appc, int*& lc)
+{
+int n=*app,m=*fp, kc=1,i,j,k,lg; //kc est l'indice de la dernière case remplie
+fpc = new int[m+1];
+appc = new int[n+1];
+lc = new int[n+1];
+*appc=n;
+*lc=n;
+appc[1]=1;
+lc[1]=0;
+for(i=2;i<=n;i++)
+{
+lc[i]=-1;
+}
+for(i=2;i<=n;i++)
+{
+int k=app[i];
+appc[i]=kc+1;
+while((j=fp[k])!=0)
+{
+lg=lc[j]+cout[k];
+if (lg>= lc[i])
+{if(lg >lc[i])
+{lc[i]=lg;
+kc=appc[i];
+fpc[kc]=j;
+}
+else
+{kc++;
+fpc[kc]=j;
+}
+}
+k++;
+}
+kc++;
+fpc[kc]=0;
+}
+*fpc=kc;
+}
+
+
+/***********************************************************************************/
+// Problème du plus court chemin
+/***********************************************************************************/
+
+/***********************************************************************************/
+// Dijkstra
+/***********************************************************************************/
+
+void dijkstra(int s, int* fs,int* aps,int** cout,int*& d,int*& pred)
+{
+int n=*aps, m=n-1,x,j,k;
+d = new int[n+1];
+*d=n;
+pred= new int[n+1]; *pred = n;
+bool* b = new bool[n+1];
+for(int i=1; i<=n;i++)
+{
+d[i] = cout[s][i]; pred[i] = s;
+b[i] = true;
+}
+d[s]=0;
+b[s] = false;
+while( m>0)
+{
+x= INT_MAX;
+for(int i=1;i<=n;i++)
+{
+if (b[i])
+if (d[i] < x)
+{
+x = d[i]; j=i;
+}
+if (x == INT_MAX) break;
+b[j] = false;
+m--;
+k=aps[j];
+while(fs[k]>0)
+{
+if(b[fs[k]])
+{
+int v = d[j] + cout[j][fs[k]];
+if (v < d[fs[k]])
+{
+d[fs[k]] = v;
+pred[fs[k]]=j;
+}
+}
+k++;
+}
+}
+}
+}
+
+
+/*
+  * * Fonction principale
+ * */
+	int main (int argc, char* argv[]) 
+	{
+return 0;	
+}
